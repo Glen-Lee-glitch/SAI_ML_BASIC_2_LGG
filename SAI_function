@@ -26,3 +26,14 @@ def get_outlier(df=None, column=None, weight=1.5): # IQR을 이용해 이상치�
     # 최댓값보다 크거나, 최솟값보다 작은 값을 이상치 데이터로 설정하고 DataFrame index 반환.
     outlier_index = fraud[(fraud < lowest_val) | (fraud > highest_val)].index
     return outlier_index
+
+# get_preprocessed_df를 로그 변환 후 V14 피처의 이상치 데이터를 삭제하는 로직으로 변경.
+def get_preprocessed_df(df=None):
+    df_copy = df.copy()
+    amount_n = np.log1p(df_copy['Amount'])
+    df_copy.insert(0, 'Amount_Scaled', amount_n)
+    df_copy.drop(['Time', 'Amount'], axis=1, inplace=True)
+    # 이상치 데이터 삭제하는 로직 추가
+    outlier_index = get_outlier(df=df.copy, column='V14', weight=1.5)
+    df_copy.drop(outlier_index, axis=0, inplace=True)
+    return df_copy
