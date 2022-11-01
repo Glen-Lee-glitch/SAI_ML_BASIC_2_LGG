@@ -1,3 +1,4 @@
+# 분류 평가 함수
 def get_clf_eval(y_test, pred):
     confusion = confusion_matrix(y_test, pred)
     accuracy = accuracy_score(y_test, pred)
@@ -10,3 +11,18 @@ def get_clf_eval(y_test, pred):
     print(confusion)
     # f1 score print 추가
     print('정확도 : {0:.4f}, 정밀도 : {1:.4f}, 재현율 : {2:.4f}, F1 : {3:.4f}'.format(accuracy, precision, recall, f1, roc_auc))
+    
+# 이상치 검출 함수
+def get_outlier(df=None, column=None, weight=1.5): # IQR을 이용해 이상치를 검출 후 삭제하는 함수
+    # fraud에 해당하는 column 데이터만 추출, 1/4 분위와 3/4 분위 지점을 np.percentile로 구함
+    fraud = df[df['Class'] == 1][column]
+    quantile_25 = np.percentile(fraud.values, 25)
+    quantile_75 = np.percentile(fraud.values, 75)
+    # IQR을 구하고, IQR에 1.5를 곱해 최댓값과 최솟값 지점 구함.
+    iqr = quantile_75 - quantile_25
+    iqr_weight = boundary * weight
+    lowest_val = quantile_25 - iqr_weight
+    highest_val = quantile_75 + iqr_weight
+    # 최댓값보다 크거나, 최솟값보다 작은 값을 이상치 데이터로 설정하고 DataFrame index 반환.
+    outlier_index = fraud[(fraud < lowest_val) | (fraud > highest_val)].index
+    return outlier_index
